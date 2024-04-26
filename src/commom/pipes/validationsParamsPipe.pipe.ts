@@ -4,7 +4,7 @@ import {
   PipeTransform,
 } from '@nestjs/common';
 
-export class validationsParamsPipe implements PipeTransform {
+export class ValidationsParamsPipe implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata) {
     console.log(`value: ${value} e metadata: ${metadata.type}`);
     if (!value) {

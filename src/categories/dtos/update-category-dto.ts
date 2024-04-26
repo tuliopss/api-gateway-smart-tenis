@@ -6,7 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class EditCategoryDTO {
+export class UpdateCategoryDTO {
   @IsString()
   @IsOptional()
   description: string;
