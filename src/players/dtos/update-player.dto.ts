@@ -8,5 +8,5 @@ export class UpdatePlayerDTO {
   readonly name: string;
 
   @IsOptional()
-  readonly idCategory: string;
+  readonly category: string;
 }

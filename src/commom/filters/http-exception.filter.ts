@@ -13,11 +13,8 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
 
   catch(exception: any, host: ArgumentsHost) {
     const context = host.switchToHttp();
-
     const request = context.getRequest();
     const response = context.getResponse();
-
-    console.log(`exception: ${JSON.stringify(exception)}`);
 
     const statusCode =
       exception instanceof HttpException

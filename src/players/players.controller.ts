@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common';
 import { ClientProxySmartRanking } from 'src/proxyrmq/client-proxy';
 import { CreatePlayerDTO } from './dtos/create-player.dto';
-import { Observable } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 import { UpdatePlayerDTO } from './dtos/update-player.dto';
 import { ValidationsParamsPipe } from 'src/commom/pipes/validationsParamsPipe.pipe';
+import { isValidObjectId } from 'mongoose';
+import { Ctx, RmqContext } from '@nestjs/microservices';
 
 @Controller('/api/v1')
 export class PlayersController {
@@ -27,7 +29,7 @@ export class PlayersController {
   async createPlayer(@Body() createPlayerDTO: CreatePlayerDTO) {
     const category = await this.clientAdminBackend.send(
       'get-categories-by-id',
-      createPlayerDTO.idCategory,
+      createPlayerDTO.category,
     );
 
     if (!category) {
@@ -48,13 +50,20 @@ export class PlayersController {
   }
 
   @Patch('/players/:id')
+  @UsePipes(ValidationPipe)
   async updatePlayer(
     @Param('id', ValidationsParamsPipe) id: string,
-    updatePlayerDTO: UpdatePlayerDTO,
+    @Body() updatePlayerDTO: UpdatePlayerDTO,
   ) {
-    const category = await this.clientAdminBackend.send(
-      'get-categories-by-id',
-      updatePlayerDTO.idCategory,
+    if (!isValidObjectId(updatePlayerDTO.category)) {
+      throw new BadRequestException('Invalid ID');
+    }
+
+    const category = await lastValueFrom(
+      this.clientAdminBackend.send(
+        'get-categories-by-id',
+        updatePlayerDTO.category,
+      ),
     );
 
     if (!category) {
@@ -68,6 +77,7 @@ export class PlayersController {
   }
 
   @Delete('/players/:id')
+  @UsePipes(ValidationPipe)
   async deletePlayer(@Param('id', ValidationsParamsPipe) id: string) {
     await this.clientAdminBackend.emit('delete-player', id);
   }
