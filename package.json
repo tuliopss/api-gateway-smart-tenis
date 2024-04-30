@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^3.2.2",
     "@nestjs/core": "^10.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/microservices": "^10.3.7",
@@ -28,8 +29,10 @@
     "@nestjs/platform-express": "^10.0.0",
     "amqp-connection-manager": "^4.1.14",
     "amqplib": "^0.10.3",
+    "aws-sdk": "^2.1608.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "dotenv": "^16.4.5",
     "moment-timezone": "^0.5.45",
     "mongoose": "^8.3.1",
     "reflect-metadata": "^0.1.13",

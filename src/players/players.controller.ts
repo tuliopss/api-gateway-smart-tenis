@@ -4,27 +4,38 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { ClientProxySmartRanking } from 'src/proxyrmq/client-proxy';
 import { CreatePlayerDTO } from './dtos/create-player.dto';
-import { lastValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, lastValueFrom, Observable } from 'rxjs';
 import { UpdatePlayerDTO } from './dtos/update-player.dto';
 import { ValidationsParamsPipe } from 'src/commom/pipes/validationsParamsPipe.pipe';
 import { isValidObjectId } from 'mongoose';
 import { Ctx, RmqContext } from '@nestjs/microservices';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AwsService } from 'src/aws/aws.service';
 
-@Controller('/api/v1')
+@Controller('/api/v1/players')
 export class PlayersController {
-  constructor(private clientProxySmartRanking: ClientProxySmartRanking) {}
+  logger = new Logger(PlayersController.name);
+
+  constructor(
+    private clientProxySmartRanking: ClientProxySmartRanking,
+    private awsService: AwsService,
+  ) {}
   private clientAdminBackend =
     this.clientProxySmartRanking.getClientProxyAdminBackendInstance();
 
-  @Post('/players')
+  @Post()
   @UsePipes(ValidationPipe)
   async createPlayer(@Body() createPlayerDTO: CreatePlayerDTO) {
     const category = await this.clientAdminBackend.send(
@@ -39,17 +50,44 @@ export class PlayersController {
     await this.clientAdminBackend.emit('create-player', createPlayerDTO);
   }
 
-  @Get('/players')
+  @Post('/:id/upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file, @Param('id') id: string) {
+    const playerFound = await firstValueFrom(
+      this.clientAdminBackend.send('get-players-by-id', id),
+    );
+
+    console.log(playerFound);
+    if (!playerFound) {
+      throw new NotFoundException('Player not found');
+    }
+
+    const urlPlayerPhoto = await this.awsService.uploadFile(file, id);
+
+    const updatePlayerDTO: UpdatePlayerDTO = {};
+    updatePlayerDTO.urlPlayerPhoto = urlPlayerPhoto.url;
+
+    await this.clientAdminBackend.emit('update-player', {
+      id: id,
+      player: updatePlayerDTO,
+    });
+
+    return this.clientAdminBackend.send('get-players-by-id', id);
+
+    // return urlPhoto;
+  }
+
+  @Get()
   getPlayers(): Observable<any> {
     return this.clientAdminBackend.send('get-players', '');
   }
 
-  @Get('/players/:id')
+  @Get(':id')
   getPlayerById(@Param('id') id: string) {
     return this.clientAdminBackend.send('get-players-by-id', id);
   }
 
-  @Patch('/players/:id')
+  @Patch(':id')
   @UsePipes(ValidationPipe)
   async updatePlayer(
     @Param('id', ValidationsParamsPipe) id: string,
@@ -76,7 +114,7 @@ export class PlayersController {
     });
   }
 
-  @Delete('/players/:id')
+  @Delete(':id')
   @UsePipes(ValidationPipe)
   async deletePlayer(@Param('id', ValidationsParamsPipe) id: string) {
     await this.clientAdminBackend.emit('delete-player', id);
