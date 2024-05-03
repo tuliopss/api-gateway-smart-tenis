@@ -7,7 +7,7 @@ export class AwsService {
 
   constructor(private configService: ConfigService) {}
 
-  public async uploadFile(file: any, idPlayer: string) {
+  public async uploadFile(file: any, id: string) {
     const AWS_BUCKET_NAME = this.configService.get<string>('AWS_BUCKET_NAME');
     const AWS_REGION = this.configService.get<string>('AWS_REGION');
     const ACCESS_KEY = this.configService.get<string>('ACCESS_KEY');
@@ -22,7 +22,7 @@ export class AwsService {
     const fileNameSplited = file.originalname.split('.');
     const fileExtension = fileNameSplited[fileNameSplited.length - 1];
 
-    const urlKey = `${idPlayer}.${fileExtension}`;
+    const urlKey = `${id}.${fileExtension}`;
 
     this.logger.log('url key', urlKey);
 

@@ -31,7 +31,7 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     response.status(statusCode).json({
       timestamp: new Date().toISOString(),
       path: request.url,
-      error: message,
+      error: message
     });
   }
 }

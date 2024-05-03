@@ -23,6 +23,7 @@ import { isValidObjectId } from 'mongoose';
 import { Ctx, RmqContext } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AwsService } from 'src/aws/aws.service';
+import { Player } from './interfaces/Player.interface';
 
 @Controller('/api/v1/players')
 export class PlayersController {
@@ -53,11 +54,10 @@ export class PlayersController {
   @Post('/:id/upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file, @Param('id') id: string) {
-    const playerFound = await firstValueFrom(
+    const playerFound = await lastValueFrom(
       this.clientAdminBackend.send('get-players-by-id', id),
     );
 
-    console.log(playerFound);
     if (!playerFound) {
       throw new NotFoundException('Player not found');
     }
@@ -68,8 +68,8 @@ export class PlayersController {
     updatePlayerDTO.urlPlayerPhoto = urlPlayerPhoto.url;
 
     await this.clientAdminBackend.emit('update-player', {
-      id: id,
-      player: updatePlayerDTO,
+      id,
+      updatePlayerDTO,
     });
 
     return this.clientAdminBackend.send('get-players-by-id', id);
@@ -83,7 +83,7 @@ export class PlayersController {
   }
 
   @Get(':id')
-  getPlayerById(@Param('id') id: string) {
+  getPlayerById(@Param('id') id: string): Observable<any> {
     return this.clientAdminBackend.send('get-players-by-id', id);
   }
 

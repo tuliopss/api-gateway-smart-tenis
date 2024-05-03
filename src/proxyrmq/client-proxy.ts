@@ -18,7 +18,6 @@ export class ClientProxySmartRanking {
     return ClientProxyFactory.create({
       transport: Transport.RMQ,
       options: {
-        // urls: ['amqp://guest:guest@localhost:5672'],
         urls: [`amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${RABBITMQ_URL}`],
         queue: 'admin-backend',
       },
